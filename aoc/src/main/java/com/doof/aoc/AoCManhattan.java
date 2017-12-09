@@ -1,50 +1,61 @@
 package com.doof.aoc;
 
-import com.doof.utils.Util;
-
-import java.util.*;
-import java.awt.Point;
+import java.util.HashMap;
+import java.util.Map;
 
 public class AoCManhattan {
 
-    private static final int MAX = 10;
-    private static final int TARGET = 46;
-
     public static void main(String[] args) {
-        // Generate a map with the 4 diagonals of the matrix and their coordinates
-        Map<Integer, Point> diagonals = new HashMap<>();
 
-        for (int i = 2; i <= MAX; i++) {
-            if (i % 2 == 0) {
-                diagonals.put(i * i - i, new Point(i/2, i/2));
-                diagonals.put(i * i, new Point(i/2, -(i/2)));
-            }
-            else {
-                diagonals.put(i * i - i, new Point(-((i-1)/2), -((i-1)/2)));
-                diagonals.put(i * i - 1, new Point(-((i-1)/2), (i-1)/2));
-            }
+        // Set the target value here
+        int target = 368078;
+        Map<Integer, Integer> diagonals = new HashMap<>();
 
+        // Find the odd square that will always be the highest diagonal value
+        double root = Math.sqrt(target);
+        int ceil = (int)Math.ceil(root);
+
+        if (ceil % 2 == 0) {
+            ceil++;
         }
 
-        // Get a sorted list of the diagonals of the matrix
-        Collection<Integer> unsorted = diagonals.keySet();
-        List<Integer> sorted = Util.asSortedList(unsorted);
+        // The 4 diagonals can be found using the odd ceiling value and the even value below it
+        int[] squares = new int[]{ceil - 1, ceil};
 
-//        for (int i = 0; i < sorted.size(); i++) {
-//            System.out.println(sorted.get(i) + ": (" + diagonals.get(sorted.get(i)).x + ", " + diagonals.get(sorted.get(i)).y + ")");
-//        }
+        // Generate a map with the 4 outermost diagonals of the matrix and their Manhattan distance
+        for (int i = 0; i < squares.length; i++) {
 
-        // Find the closest diagonal and the distance to it
-        int dist = MAX;
-        int closestDiagonal = 0;
-        for (Integer num : diagonals.keySet()) {
-            if (Math.abs(TARGET - num) < Math.abs(dist)) {
-                dist = TARGET - num;
-                closestDiagonal = num;
+            if (squares[i] % 2 == 1) {
+                diagonals.put(squares[i] * squares[i] - squares[i] + 1, squares[i]-1);
+                diagonals.put(squares[i] * squares[i], squares[i]-1);
+            } else {
+                diagonals.put(squares[i] * squares[i] - squares[i] + 1, squares[i]);
+                diagonals.put(squares[i] * squares[i] + 1, squares[i]);
             }
         }
 
-        System.out.println("Diagonal: " + closestDiagonal);
-        System.out.println("Distance: " + dist);
+        // Find the diagonal that's closest to the target
+        // Trying to find numbers closest to the max diagonal sucks
+        // For example, 10 is only 1 spot away from 25, but that's a pain to calculate
+        // So here we set the default values by using the diagonal below max, i.e. 9 instead of 25
+        int closestDiagonal = ceil * ceil;
+        int closestDistance = target - (ceil - 2) * (ceil - 2);
+
+        // Check and see if one of the other diagonals is closer than the assumed numbers above
+        for (int key : diagonals.keySet()) {
+            if (closestDistance == -1) {
+                closestDiagonal = key;
+                closestDistance = Math.abs(key - target);
+            } else {
+                if (Math.abs(key - target) < closestDistance) {
+                    closestDiagonal = key;
+                    closestDistance = Math.abs(key - target);
+                }
+            }
+        }
+
+        // Calculate the final manhattan distance
+        int manhattan = diagonals.get(closestDiagonal) - closestDistance;
+        System.out.println("Manhattan: " + manhattan);
     }
 }
